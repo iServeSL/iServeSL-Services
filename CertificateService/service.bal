@@ -14,7 +14,7 @@ mongodb:ConnectionConfig mongoConfig = {
 //Create a new database client
 mongodb:Client mongoClient = checkpanic new (mongoConfig);
 
-configurable string messagingService = "https://api.twilio.com";
+configurable string messagingService = "https://localhost:9090";
 //Create a new messaging service client
 http:Client messagingServiceClient = check new(messagingService);
 
