@@ -3,9 +3,9 @@ import ballerina/http;
 import ballerinax/twilio;
 import ballerina/log;
 
-configurable string twilioPhoneNumber = ?;
-configurable string accountSID = ?;
-configurable string authToken = ?;
+configurable string twilioPhoneNumber = "+12512415480";
+configurable string accountSID = "ACead5af59bdc241e0d32b3315fd5fca44";
+configurable string authToken = "df552cfc2a8314d94b86d8c2c2e24044";
 twilio:ConnectionConfig twilioConfig = {
     twilioAuth: {
         accountSId: accountSID,
