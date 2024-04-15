@@ -3,7 +3,7 @@ import ballerina/http;
 import ballerinax/twilio;
 import ballerina/log;
 
-configurable string twilioPhoneNumber = ;
+configurable string twilioPhoneNumber = ?;
 configurable string accountSID = ?;
 configurable string authToken = ?;
 twilio:ConnectionConfig twilioConfig = {
