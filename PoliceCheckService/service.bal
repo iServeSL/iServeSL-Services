@@ -13,7 +13,11 @@ mongodb:Client mongoClient = checkpanic new (mongoConfig);
 
 # A service representing a network-accessible API
 # bound to port `5050`.
-
+@http:ServiceConfig {
+    cors: {
+        allowOrigins: ["http://localhost:5173"]
+    }
+}
 service / on new http:Listener(5050) {
 
     resource function get checkAvailability/[string NIC]() returns boolean|InvalidNicError?|error {
