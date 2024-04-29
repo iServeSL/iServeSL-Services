@@ -109,7 +109,7 @@ service / on new http:Listener(8080) {
             allData[index] = data;
             index += 1;
 
-            io:println(data.id);
+            io:println(data._id);
             io:println(data.NIC);
             io:println(data.email);
             io:println(data.address);
@@ -200,7 +200,7 @@ service / on new http:Listener(8080) {
 
             string|error smsResponse = check messagingServiceClient->/message.post({
                 recipient: phone_number,
-                message: string `Your Certificate Request has been completed. Use the ID '${id}' to download the certificate.`
+                message: string `Your Grama Niladhari Certificate Request has been completed. Use the ID '${id}' to download the certificate.`
             });
 
             if (smsResponse is error) {
@@ -212,4 +212,15 @@ service / on new http:Listener(8080) {
 
         return resultData;
     }
+
+    //Updating user request status to rejected
+    resource function post statusReject/[string id]() returns int|error {
+        map<json> queryString = {"$set": {"status": "rejected"}};
+        map<json> filter = {"id": id};
+
+        int|error resultData = check mongoClient->update(queryString, "requests", filter = filter);
+
+        return resultData;
+    }
+
 }

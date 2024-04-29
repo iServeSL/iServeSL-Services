@@ -63,7 +63,6 @@ service / on new http:Listener(9090) {
             };
         }
     }
-
 }
 
 public type InvalidNicError record {|
