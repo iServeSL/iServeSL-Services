@@ -1,5 +1,3 @@
-# Copyright (c) 2024 Sachin Akash
-
 import ballerina/http;
 import ballerinax/mongodb;
 import ballerina/regex;
@@ -65,7 +63,6 @@ service / on new http:Listener(9090) {
             };
         }
     }
-
 }
 
 public type InvalidNicError record {|

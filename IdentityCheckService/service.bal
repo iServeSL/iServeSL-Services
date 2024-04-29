@@ -1,5 +1,3 @@
-# Copyright (c) 2024 Sachin Akash
-
 import ballerina/http;
 import ballerinax/mongodb;
 import ballerina/regex;
@@ -18,7 +16,7 @@ mongodb:ConnectionConfig mongoConfig = {
 //creating a new client
 mongodb:Client mongoClient = checkpanic new (mongoConfig);
 
-service / on new http:Listener(9090) {
+service / on new http:Listener(7070) {
 
     //Check for the given NIC
     resource function get checkNIC/[string NIC]() returns boolean|InvalidNicError?|error? {

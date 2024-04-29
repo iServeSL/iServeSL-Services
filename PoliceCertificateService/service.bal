@@ -1,10 +1,8 @@
-# Copyright (c) 2024 Sachin Akash
-
 import ballerina/io;
 import ballerina/http;
 import ballerina/log;
 import ballerinax/mongodb;
-import CertificateService.Types;
+import PoliceCertificateService.Types;
 import ballerina/uuid;
 
 mongodb:ConnectionConfig mongoConfig = {
@@ -16,14 +14,15 @@ mongodb:ConnectionConfig mongoConfig = {
 //Create a new database client
 mongodb:Client mongoClient = checkpanic new (mongoConfig);
 
-configurable string messagingService = "http://localhost:9090";
+configurable string messagingService = "http://localhost:6060";
 //Create a new messaging service client
 http:Client messagingServiceClient = check new(messagingService);
 
 type requestData record {
     json _id;
     string NIC;
-    map<json> address;
+    string email;
+    string name;
     string status;
     string phone;
     string id;
@@ -45,7 +44,7 @@ type requestCompletedData record{
     string fullname;
     map<json> address;
     string DoB;
-    string criminalstatus;
+    string criminalStatus;
 };
 
 type RequestConflict record {|
@@ -55,8 +54,13 @@ type RequestConflict record {|
     } body;
 |};
 
-service / on new http:Listener(8080) {
-    //creating an entry for user requests
+@http:ServiceConfig {
+    cors: {
+        allowOrigins: ["http://localhost:5173"]
+    }
+}
+service / on new http:Listener(4040) {
+    //creating an entry for police requests
     resource function post newRequestRecord(@http:Payload Types:CertificateRequest request) returns string|RequestConflict|error {
         log:printInfo(request.toJsonString());
 
@@ -65,27 +69,22 @@ service / on new http:Listener(8080) {
 
         map<json> doc = {
             "NIC": request.NIC,
-            "address": {
-                "no": request.no,
-                "street": request.street,
-                "village": request.village,
-                "city": request.city,
-                "postalcode": request.postalcode
-            },
+            "email": request.email,
+            "name": request.name,
             "status": "pending",
             "phone": request.phone,
             "id": uuidString
         };
 
         map<json> queryString = {"NIC": request.NIC, "status": "pending"};
-        stream<requestCheck, error?> result = check mongoClient->find(collectionName = "requests", filter = (queryString));
+        stream<requestCheck, error?> result = check mongoClient->find(collectionName = "policeRequests", filter = (queryString));
         
         check result.forEach(function(requestCheck datas) {
             valid = true;
         });
 
         if (!valid){
-            error? insertResult = check mongoClient->insert(doc, collectionName = "requests");
+            error? insertResult = check mongoClient->insert(doc, collectionName = "policeRequests");
             if (insertResult !is error) {
                 return uuidString;
             }
@@ -98,10 +97,10 @@ service / on new http:Listener(8080) {
         }    
     }
 
-    //Get user requests from the database
-    resource function get getRequests() returns requestData[]|error {
-
-        stream<requestData, error?> resultData = check mongoClient->find(collectionName = "requests");
+    //Get user requests from the database for a specific user
+    resource function get getRequests/[string email]() returns requestData[]|error {
+        map<json> queryString = {"email": email};
+        stream<requestData, error?> resultData = check mongoClient->find(collectionName = "policeRequests", filter = (queryString));
 
         requestData[] allData = [];
         int index = 0;
@@ -109,9 +108,10 @@ service / on new http:Listener(8080) {
             allData[index] = data;
             index += 1;
 
-            io:println(data.id);
+            io:println(data._id);
             io:println(data.NIC);
-            io:println(data.address);
+            io:println(data.email);
+            io:println(data.name);
             io:println(data.status);
             io:println(data.phone);
             io:println(data.id);
@@ -121,7 +121,7 @@ service / on new http:Listener(8080) {
         return allData;
     }
 
-    //Get a specific record
+    //Get a specific record (this is for search function which will be implemented in the future)
     resource function get getReqRecord/[string id]() returns requestData[]|error? {
 
         map<json> queryString = {"id": id};
@@ -133,7 +133,7 @@ service / on new http:Listener(8080) {
             index += 1;
 
             io:println(data.NIC);
-            io:println(data.address);
+            io:println(data.name);
             io:println(data.status);
             io:println(data.phone);
             io:println(data.id);
@@ -142,12 +142,12 @@ service / on new http:Listener(8080) {
         return allData;
     }
 
-    //get details of users
+    //get details of users (to certificate generation)
     resource function get getCompletedReq/[string id]() returns json|error? {
         boolean valid = false;
         string nic ="";
         map<json> queryString = {"id": id, "status": "completed"};
-        stream<requestCompletedCheck, error?> result = check mongoClient->find(collectionName = "requests", filter = (queryString));
+        stream<requestCompletedCheck, error?> result = check mongoClient->find(collectionName = "policeRequests", filter = (queryString));
         json[] allData = [];
 
         check result.forEach(function(requestCompletedCheck datas) {
@@ -165,7 +165,7 @@ service / on new http:Listener(8080) {
                 "fullname": data.fullname,
                 "address": data.address,
                 "DoB": data.DoB,
-                "criminalstatus": data.criminalstatus
+                "criminalstatus": data.criminalStatus
             };
             allData.push(dataJson);
             });
@@ -184,11 +184,11 @@ service / on new http:Listener(8080) {
         map<json> queryString = {"$set": {"status": status}};
         map<json> filter = {"id": id};
 
-        int|error resultData = check mongoClient->update(queryString, "requests", filter = filter);
+        int|error resultData = check mongoClient->update(queryString, "policeRequests", filter = filter);
 
         if (status == "completed") {
             map<json> filter_query = {"id": id};
-            stream<requestData, error?> entry_details = checkpanic mongoClient->find(collectionName = "requests", filter = filter_query, 'limit = 1);
+            stream<requestData, error?> entry_details = checkpanic mongoClient->find(collectionName = "policeRequests", filter = filter_query, 'limit = 1);
 
             string phone_number = "";
             check entry_details.forEach(function(requestData entry) {
@@ -199,7 +199,7 @@ service / on new http:Listener(8080) {
 
             string|error smsResponse = check messagingServiceClient->/message.post({
                 recipient: phone_number,
-                message: string `Your Certificate Request has been completed. Use the ID '${id}' to download the certificate.`
+                message: string `Your Police Character Certificate Request has been completed. Use the ID '${id}' to download the certificate.`
             });
 
             if (smsResponse is error) {
@@ -211,4 +211,15 @@ service / on new http:Listener(8080) {
 
         return resultData;
     }
+
+    //Updating user request status to rejected
+    // resource function post statusReject/[string id]() returns int|error {
+    //     map<json> queryString = {"$set": {"status": "rejected"}};
+    //     map<json> filter = {"id": id};
+
+    //     int|error resultData = check mongoClient->update(queryString, "requests", filter = filter);
+
+    //     return resultData;
+    // }
+
 }
