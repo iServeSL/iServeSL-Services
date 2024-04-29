@@ -199,7 +199,7 @@ service / on new http:Listener(4040) {
 
             string|error smsResponse = check messagingServiceClient->/message.post({
                 recipient: phone_number,
-                message: string `Your Police Character Certificate Request has been completed. Use the ID '${id}' to download the certificate.`
+                message: string `Your Police Character Certificate Request has been completed. Use the ID '${id}' to download the certificate. -iServeSL-`
             });
 
             if (smsResponse is error) {
