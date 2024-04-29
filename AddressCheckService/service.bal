@@ -19,16 +19,13 @@ mongodb:Client mongoClient = checkpanic new (mongoConfig);
 
 @http:ServiceConfig {
     cors: {
-        allowOrigins: ["*"],
-        allowCredentials: true,
-        allowMethods: ["*"]
+        allowOrigins: ["http://localhost:5173"]
     }
 }
-
 service / on new http:Listener(9090) {
 
     //Check for the given Address
-    resource function get checkAddress(string NIC, int no, string village, string city, int postalcode, string? street = " ") returns boolean|InvalidNicError?|error? {
+    resource function get checkAddress(string NIC, string no, string village, string city, string postalcode, string? street = " ") returns boolean|InvalidNicError?|error? {
         boolean valid = false;
         
         // Validate the NIC format using a regular expression

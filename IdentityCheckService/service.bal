@@ -16,6 +16,11 @@ mongodb:ConnectionConfig mongoConfig = {
 //creating a new client
 mongodb:Client mongoClient = checkpanic new (mongoConfig);
 
+@http:ServiceConfig {
+    cors: {
+        allowOrigins: ["http://localhost:5173"]
+    }
+}
 service / on new http:Listener(7070) {
 
     //Check for the given NIC

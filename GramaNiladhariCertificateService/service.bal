@@ -54,6 +54,11 @@ type RequestConflict record {|
     } body;
 |};
 
+@http:ServiceConfig {
+    cors: {
+        allowOrigins: ["http://localhost:5173"]
+    }
+}
 service / on new http:Listener(8080) {
     //creating an entry for grama niladhari requests
     resource function post newRequestRecord(@http:Payload Types:CertificateRequest request) returns string|RequestConflict|error {
