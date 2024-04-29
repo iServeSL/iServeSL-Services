@@ -12,11 +12,11 @@ mongodb:ConnectionConfig mongoConfig = {
 mongodb:Client mongoClient = checkpanic new (mongoConfig);
 
 # A service representing a network-accessible API
-# bound to port `7070`.
+# bound to port `5050`.
 
-service / on new http:Listener(7070) {
+service / on new http:Listener(5050) {
 
-    resource function get checkStatus/[string NIC]() returns string|InvalidNicError?|error {
+    resource function get checkStatus/[string NIC]/[string name]() returns json|InvalidNicError?|error {
         // Validate the NIC format using a regular expression
         string nicPattern = "^(\\d{9}[vVxX]|\\d{12})$"; // NIC pattern with or without 'v' or 'x'
         // Check if the NIC matches the pattern
@@ -37,14 +37,10 @@ service / on new http:Listener(7070) {
             }
 
         } else {
-            return {
-                body: {
-                    errmsg: string `Invalid NIC: ${NIC}`
-                }
-            };
+            return {"error": "Invaild NIC"};
         }
 
-        return status;
+        return {"status": status, "name": name};
     }
 }
 

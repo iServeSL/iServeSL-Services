@@ -21,6 +21,7 @@ http:Client messagingServiceClient = check new(messagingService);
 type requestData record {
     json _id;
     string NIC;
+    string email;
     map<json> address;
     string status;
     string phone;
@@ -43,7 +44,7 @@ type requestCompletedData record{
     string fullname;
     map<json> address;
     string DoB;
-    string criminalstatus;
+    string maritalStatus;
 };
 
 type RequestConflict record {|
@@ -54,7 +55,7 @@ type RequestConflict record {|
 |};
 
 service / on new http:Listener(8080) {
-    //creating an entry for user requests
+    //creating an entry for grama niladhari requests
     resource function post newRequestRecord(@http:Payload Types:CertificateRequest request) returns string|RequestConflict|error {
         log:printInfo(request.toJsonString());
 
@@ -63,6 +64,7 @@ service / on new http:Listener(8080) {
 
         map<json> doc = {
             "NIC": request.NIC,
+            "email": request.email,
             "address": {
                 "no": request.no,
                 "street": request.street,
@@ -96,10 +98,10 @@ service / on new http:Listener(8080) {
         }    
     }
 
-    //Get user requests from the database
-    resource function get getRequests() returns requestData[]|error {
-
-        stream<requestData, error?> resultData = check mongoClient->find(collectionName = "requests");
+    //Get user requests from the database for a specific user
+    resource function get getRequests/[string email]() returns requestData[]|error {
+        map<json> queryString = {"email": email};
+        stream<requestData, error?> resultData = check mongoClient->find(collectionName = "requests", filter = (queryString));
 
         requestData[] allData = [];
         int index = 0;
@@ -109,6 +111,7 @@ service / on new http:Listener(8080) {
 
             io:println(data.id);
             io:println(data.NIC);
+            io:println(data.email);
             io:println(data.address);
             io:println(data.status);
             io:println(data.phone);
@@ -119,7 +122,7 @@ service / on new http:Listener(8080) {
         return allData;
     }
 
-    //Get a specific record
+    //Get a specific record (this is for search function which will be implemented in the future)
     resource function get getReqRecord/[string id]() returns requestData[]|error? {
 
         map<json> queryString = {"id": id};
@@ -140,7 +143,7 @@ service / on new http:Listener(8080) {
         return allData;
     }
 
-    //get details of users
+    //get details of users (to certificate generation)
     resource function get getCompletedReq/[string id]() returns json|error? {
         boolean valid = false;
         string nic ="";
@@ -155,7 +158,7 @@ service / on new http:Listener(8080) {
 
         if (valid){
             map<json> queryString1 = {"NIC": nic};
-            stream<requestCompletedData, error?> resultData = check mongoClient->find(collectionName = "police", filter = queryString1);
+            stream<requestCompletedData, error?> resultData = check mongoClient->find(collectionName = "citizen", filter = queryString1);
             
             check resultData.forEach(function(requestCompletedData data) {
                 json dataJson = {
@@ -163,7 +166,7 @@ service / on new http:Listener(8080) {
                 "fullname": data.fullname,
                 "address": data.address,
                 "DoB": data.DoB,
-                "criminalstatus": data.criminalstatus
+                "maritalstatus": data.maritalStatus
             };
             allData.push(dataJson);
             });
