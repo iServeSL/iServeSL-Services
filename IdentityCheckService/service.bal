@@ -1,5 +1,3 @@
-# Copyright (c) 2024 Sachin Akash
-
 import ballerina/http;
 import ballerinax/mongodb;
 import ballerina/regex;

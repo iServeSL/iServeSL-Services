@@ -1,5 +1,3 @@
-# Copyright (c) 2024 Sachin Akash
-
 import MessagingService.Types;
 import ballerina/http;
 import ballerinax/twilio;
