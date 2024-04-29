@@ -16,31 +16,31 @@ mongodb:Client mongoClient = checkpanic new (mongoConfig);
 
 service / on new http:Listener(5050) {
 
-    resource function get checkStatus/[string NIC]/[string name]() returns json|InvalidNicError?|error {
+    resource function get checkAvailability/[string NIC]() returns boolean|InvalidNicError?|error {
         // Validate the NIC format using a regular expression
         string nicPattern = "^(\\d{9}[vVxX]|\\d{12})$"; // NIC pattern with or without 'v' or 'x'
         // Check if the NIC matches the pattern
         boolean isValidNIC = regex:matches(NIC, nicPattern);
 
-        string status = "";
+        string criminalStatus = "";
 
         if isValidNIC {
             map<json> filter_query = {"NIC": NIC};
             stream<PoliceEntry, error?> policeEntry = checkpanic mongoClient->find(collectionName = "police", filter = filter_query, 'limit = 1);
 
             check policeEntry.forEach(function(PoliceEntry entry) {
-                status = entry.criminalstatus;
+                criminalStatus = entry.criminalstatus;
             });
 
-            if status is "" {
-                status = "clear";
+            if criminalStatus is "" {
+                criminalStatus = "clear";
             }
 
         } else {
-            return {"error": "Invaild NIC"};
+            return false;
         }
 
-        return {"status": status, "name": name};
+        return true;
     }
 }
 
