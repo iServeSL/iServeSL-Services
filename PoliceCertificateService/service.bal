@@ -211,15 +211,4 @@ service / on new http:Listener(4040) {
 
         return resultData;
     }
-
-    //Updating user request status to rejected
-    // resource function post statusReject/[string id]() returns int|error {
-    //     map<json> queryString = {"$set": {"status": "rejected"}};
-    //     map<json> filter = {"id": id};
-
-    //     int|error resultData = check mongoClient->update(queryString, "requests", filter = filter);
-
-    //     return resultData;
-    // }
-
 }
