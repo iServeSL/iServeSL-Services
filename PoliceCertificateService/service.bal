@@ -150,42 +150,6 @@ service / on new http:Listener(4040) {
         return allData;
     }
 
-    //get details of users (to certificate generation)
-    resource function get getCompletedReq/[string id]() returns json|error? {
-        boolean valid = false;
-        string nic ="";
-        map<json> queryString = {"id": id, "status": "completed"};
-        stream<requestCompletedCheck, error?> result = check mongoClient->find(collectionName = "policeRequests", filter = (queryString));
-        json[] allData = [];
-
-        check result.forEach(function(requestCompletedCheck datas) {
-            valid = true;
-            nic = datas.NIC;
-        });
-
-        if (valid){
-            map<json> queryString1 = {"NIC": nic};
-            stream<requestCompletedData, error?> resultData = check mongoClient->find(collectionName = "police", filter = queryString1);
-            
-            check resultData.forEach(function(requestCompletedData data) {
-                json dataJson = {
-                "NIC": data.NIC,
-                "fullname": data.fullname,
-                "address": data.address,
-                "DoB": data.DoB,
-                "criminalstatus": data.criminalStatus
-            };
-            allData.push(dataJson);
-            });
-            json responseData = {"id": id, "data": allData[0]};
-
-            return responseData;
-        }
-        else{
-            return ();
-        }
-    }
-
     //Updating user request status
     resource function put updateRequest/[string id]/[string status]() returns int|error {
 
