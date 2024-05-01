@@ -121,6 +121,14 @@ service / on new http:Listener(4040) {
         return allData;
     }
 
+    //Delete user request from the database using UUID
+    resource function delete deleteRequest/[string uuid]() returns int|error? {
+        map<json> queryString = {"id": uuid};
+        int|error? resultData = check mongoClient->delete(collectionName = "policeRequests", filter = (queryString));
+
+        return resultData;
+    }
+
     //Get a specific record (this is for search function which will be implemented in the future)
     resource function get getReqRecord/[string id]() returns requestData[]|error? {
 
@@ -211,15 +219,4 @@ service / on new http:Listener(4040) {
 
         return resultData;
     }
-
-    //Updating user request status to rejected
-    // resource function post statusReject/[string id]() returns int|error {
-    //     map<json> queryString = {"$set": {"status": "rejected"}};
-    //     map<json> filter = {"id": id};
-
-    //     int|error resultData = check mongoClient->update(queryString, "requests", filter = filter);
-
-    //     return resultData;
-    // }
-
 }
