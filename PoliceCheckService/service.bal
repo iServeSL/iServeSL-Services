@@ -26,25 +26,34 @@ service / on new http:Listener(5050) {
         // Check if the NIC matches the pattern
         boolean isValidNIC = regex:matches(NIC, nicPattern);
 
-        string criminalStatus = "";
+        // string criminalStatus = "";
 
         if isValidNIC {
-            map<json> filter_query = {"NIC": NIC};
-            stream<PoliceEntry, error?> policeEntry = checkpanic mongoClient->find(collectionName = "police", filter = filter_query, 'limit = 1);
+            boolean valid = false;
+            map<json> queryString = {"NIC": NIC};
+            stream<PoliceEntry, error?> resultData = check mongoClient->find(collectionName = "police", filter = (queryString));
 
-            check policeEntry.forEach(function(PoliceEntry entry) {
-                criminalStatus = entry.criminalstatus;
+            check resultData.forEach(function(PoliceEntry datas) {
+
+                valid = true;
+
             });
 
-            if criminalStatus is "" {
-                criminalStatus = "clear";
-            }
+            return valid;
+            //     criminalStatus = entry.criminalstatus;
+            // });
+
+            // if criminalStatus is "" {
+            //     criminalStatus = "clear";
+            // }
 
         } else {
-            return false;
+            return {
+                body: {
+                    errmsg: string `Invalid NIC: ${NIC}`
+                }
+            };
         }
-
-        return true;
     }
 }
 
